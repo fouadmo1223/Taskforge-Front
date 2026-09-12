@@ -1,0 +1,26 @@
+{
+  "name": "taskforge-front",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=20.11.0"
+  },
+  "scripts": {
+    "build:deps": "pnpm --filter @flowdesk/types build && pnpm --filter @flowdesk/utils build",
+    "dev": "pnpm build:deps && pnpm --filter @flowdesk/web dev",
+    "build": "pnpm build:deps && pnpm --filter @flowdesk/web build",
+    "lint": "pnpm --filter @flowdesk/web lint",
+    "test": "pnpm build:deps && pnpm --filter @flowdesk/web test",
+    "typecheck": "pnpm build:deps && pnpm --filter @flowdesk/web typecheck"
+  },
+  "devDependencies": {
+    "prettier": "3.4.2",
+    "typescript": "5.7.3"
+  },
+  "pnpm": {
+    "overrides": {
+      "typescript": "5.7.3"
+    }
+  }
+}
