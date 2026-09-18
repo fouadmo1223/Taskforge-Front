@@ -7,7 +7,7 @@ import { MoreHorizontal, UserPlus, Users } from 'lucide-react';
 import * as Dropdown from '@radix-ui/react-dropdown-menu';
 import { useWorkspace } from '@/features/workspace/workspace.context';
 import { useAuth } from '@/features/auth/auth.store';
-import { useRoles } from '@/features/roles/roles.api';
+import { roleLabel, useRoles } from '@/features/roles/roles.api';
 import {
   useChangeMemberRole,
   useInviteMember,
@@ -53,8 +53,8 @@ export function MembersPage(): React.ReactElement {
   const [inviteOpen, setInviteOpen] = useState(false);
 
   const roleOptions = useMemo(
-    () => (roles.data ?? []).filter((r) => !r.isOwner).map((r) => ({ value: r.id, label: r.name })),
-    [roles.data],
+    () => (roles.data ?? []).filter((r) => !r.isOwner).map((r) => ({ value: r.id, label: roleLabel(r, t) })),
+    [roles.data, t],
   );
 
   const form = useForm<InviteValues>({
@@ -254,7 +254,7 @@ function MemberRow({
             options={roleOptions}
           />
         ) : (
-          <span className="text-text-muted">{member.role?.name ?? '—'}</span>
+          <span className="text-text-muted">{member.role ? roleLabel(member.role, t) : '—'}</span>
         )}
       </td>
       <td className="px-4 py-3">

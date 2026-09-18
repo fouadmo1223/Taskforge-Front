@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { motion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
+import { cn } from '@/lib/cn';
 import { LanguageThemeControls } from '@/components/layout/language-theme-controls';
 import { BrandMark } from '@/components/layout/brand-mark';
 
@@ -10,11 +11,15 @@ export function AuthLayout({
   subtitle,
   children,
   footer,
+  centerTitle,
 }: {
   title: string;
   subtitle?: string;
   children: ReactNode;
   footer?: ReactNode;
+  /** Center the title/subtitle instead of the default left alignment — for
+   * pages whose body content (e.g. a status icon + message) is centered too. */
+  centerTitle?: boolean;
 }): React.ReactElement {
   const { t } = useTranslation();
   return (
@@ -45,8 +50,8 @@ export function AuthLayout({
             transition={{ duration: 0.25, ease: [0.25, 1, 0.5, 1] }}
             className="w-full max-w-sm"
           >
-            <h1 className="text-xl font-semibold text-text">{title}</h1>
-            {subtitle && <p className="mt-1.5 text-sm text-text-muted">{subtitle}</p>}
+            <h1 className={cn('text-xl font-semibold text-text', centerTitle && 'text-center')}>{title}</h1>
+            {subtitle && <p className={cn('mt-1.5 text-sm text-text-muted', centerTitle && 'text-center')}>{subtitle}</p>}
             <div className="mt-6">{children}</div>
             {footer && <div className="mt-6 text-center text-sm text-text-muted">{footer}</div>}
           </motion.div>

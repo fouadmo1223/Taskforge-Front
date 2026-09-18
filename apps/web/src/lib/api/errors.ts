@@ -3,21 +3,26 @@ import i18n from '@/lib/i18n';
 import { ApiError } from './client';
 
 /**
- * Human text for any thrown error — use this for every `toast.error`.
- *
- * Always shows the server's own message when there is one: it's specific to
- * what actually went wrong (e.g. "An account with that email already
- * exists."), whereas the per-code translations are generic and can be
- * actively misleading (e.g. `conflict` is also used for optimistic-locking
- * clashes, so its Arabic text talks about refreshing the page — wrong for a
- * duplicate-email error). Falls back to a translated generic line only when
- * the server didn't send a message at all.
+ * Error codes with their own purpose-written translation in both locales
+ * (not shared with unrelated errors) — safe to prefer over the raw server
+ * message in every language. Every other code is a broad bucket reused
+ * across unrelated conditions (e.g. `conflict` covers both "email already
+ * exists" and optimistic-locking clashes), so a single translation for it
+ * can't be accurate for all of them — those fall back to the server's own
+ * (English) message instead, which is always at least accurate.
  */
+const SPECIFIC_ERROR_CODES = new Set(['invite_invalid', 'invite_email_mismatch']);
+
+/** Human text for any thrown error — use this for every `toast.error`. */
 export function errorText(err: unknown, t: TFunction): string {
   const lang = i18n.resolvedLanguage ?? i18n.language ?? 'en';
   const isEnglish = lang.startsWith('en');
 
   if (err instanceof ApiError) {
+    if (SPECIFIC_ERROR_CODES.has(err.code)) {
+      const byCode = t(`errors.byCode.${err.code}`, { defaultValue: '' });
+      if (byCode) return byCode;
+    }
     if (err.message) return err.message;
     if (!isEnglish) {
       const byCode = t(`errors.byCode.${err.code}`, { defaultValue: '' });

@@ -27,7 +27,7 @@ export function VerifyEmailPage(): React.ReactElement {
   }, [params]);
 
   return (
-    <AuthLayout title={t('common.appName')}>
+    <AuthLayout title={t('auth.verifyEmailPageTitle')} centerTitle>
       <div className="flex flex-col items-center gap-3 text-center">
         {state === 'pending' && (
           <>

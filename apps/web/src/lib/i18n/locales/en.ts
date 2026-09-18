@@ -77,6 +77,8 @@ export const en = {
     verifyEmailTitle: 'Verifying your email…',
     verifyEmailOk: 'Your email is verified. You can sign in now.',
     verifyEmailFail: 'This verification link is invalid or has expired.',
+    acceptInviteTitle: 'Joining workspace…',
+    verifyEmailPageTitle: 'Email verification',
     registeredTitle: 'Almost there',
     registeredBody: 'We sent a verification link to {{email}}. Confirm it to activate your account.',
     invalidCredentials: 'Invalid email or password.',
@@ -139,6 +141,15 @@ export const en = {
     selectAll: 'All',
     permissionsCount_one: '{{count}} permission',
     permissionsCount_other: '{{count}} permissions',
+    systemRole: {
+      owner: 'Owner',
+      admin: 'Admin',
+      manager: 'Project Manager',
+      member: 'Team Member',
+      contributor: 'Contributor',
+      client: 'Client',
+      guest: 'Guest',
+    },
   },
   projects: {
     create: 'New project',
@@ -835,6 +846,8 @@ export const en = {
       unprocessable: 'That request could not be processed.',
       internal_error: 'Something went wrong on our side. Please try again.',
       service_unavailable: 'The service is temporarily unavailable. Please try again shortly.',
+      invite_invalid: 'This invitation is invalid or has expired.',
+      invite_email_mismatch: 'This invitation was sent to a different email address.',
     },
   },
 };

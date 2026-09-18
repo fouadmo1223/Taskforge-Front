@@ -4,6 +4,7 @@ import { Check, Plus, ShieldCheck, Trash2 } from 'lucide-react';
 import { PERMISSION_GROUPS, type Permission } from '@flowdesk/types';
 import { useWorkspace } from '@/features/workspace/workspace.context';
 import {
+  roleLabel,
   useCreateRole,
   useDeleteRole,
   useRoles,
@@ -65,7 +66,7 @@ export function RolesPage(): React.ReactElement {
                 )}
               >
                 <div className="flex items-center gap-2">
-                  <span className="font-medium text-text">{role.name}</span>
+                  <span className="font-medium text-text">{roleLabel(role, t)}</span>
                   {role.system && <Badge>{t('roles.system')}</Badge>}
                   {role.isDefault && <Badge tone="primary">{t('roles.default')}</Badge>}
                 </div>
@@ -181,7 +182,7 @@ function RoleEditorDialog({
       open
       onOpenChange={(o) => !o && onClose()}
       size="lg"
-      title={role ? role.name : t('roles.createTitle')}
+      title={role ? roleLabel(role, t) : t('roles.createTitle')}
       description={t('roles.permissions') + (adminLocked ? ' · locked' : '')}
       footer={
         <>

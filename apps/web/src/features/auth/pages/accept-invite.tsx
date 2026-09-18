@@ -34,7 +34,7 @@ export function AcceptInvitePage(): React.ReactElement {
   }, [params, navigate, reloadMemberships, t]);
 
   return (
-    <AuthLayout title={t('common.appName')}>
+    <AuthLayout title={t('auth.acceptInviteTitle')} centerTitle>
       <div className="flex flex-col items-center gap-3 text-center">
         {error ? (
           <>

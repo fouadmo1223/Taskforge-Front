@@ -79,6 +79,8 @@ export const ar: TranslationSchema = {
     verifyEmailTitle: 'جارٍ التحقق من بريدك…',
     verifyEmailOk: 'تم التحقق من بريدك. يمكنك تسجيل الدخول الآن.',
     verifyEmailFail: 'رابط التحقق غير صالح أو انتهت صلاحيته.',
+    acceptInviteTitle: 'الانضمام إلى مساحة العمل…',
+    verifyEmailPageTitle: 'التحقق من البريد الإلكتروني',
     registeredTitle: 'اقتربت من الانتهاء',
     registeredBody: 'أرسلنا رابط تحقق إلى {{email}}. أكّده لتفعيل حسابك.',
     invalidCredentials: 'البريد الإلكتروني أو كلمة المرور غير صحيحة.',
@@ -141,6 +143,15 @@ export const ar: TranslationSchema = {
     selectAll: 'الكل',
     permissionsCount_one: 'صلاحية واحدة',
     permissionsCount_other: '{{count}} صلاحيات',
+    systemRole: {
+      owner: 'مالك',
+      admin: 'مسؤول',
+      manager: 'مدير مشروع',
+      member: 'عضو فريق',
+      contributor: 'مساهم',
+      client: 'عميل',
+      guest: 'ضيف',
+    },
   },
   projects: {
     create: 'مشروع جديد',
@@ -837,6 +848,8 @@ export const ar: TranslationSchema = {
       unprocessable: 'تعذّر معالجة هذا الطلب.',
       internal_error: 'حدث خطأ لدينا. حاول مرة أخرى.',
       service_unavailable: 'الخدمة غير متاحة مؤقتًا. حاول بعد قليل.',
+      invite_invalid: 'هذه الدعوة غير صالحة أو انتهت صلاحيتها.',
+      invite_email_mismatch: 'أُرسلت هذه الدعوة إلى بريد إلكتروني مختلف.',
     },
   },
 };
