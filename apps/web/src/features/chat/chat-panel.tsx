@@ -358,6 +358,7 @@ function ConversationThread({ conversation }: { conversation: ConversationView }
   const { byId } = useWorkspaceUsers(workspaceId);
   const myId = useAuth((s) => s.user?.id ?? '');
   const qc = useQueryClient();
+  const open = useChatUi((s) => s.open);
   const messages = useChatMessages(workspaceId, conversation.id);
   const reads = useReadReceipts(workspaceId, conversation.id);
   const send = useSendMessage(workspaceId, conversation.id);
@@ -429,9 +430,36 @@ function ConversationThread({ conversation }: { conversation: ConversationView }
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ block: 'end' });
     const last = items.at(-1);
-    if (last) markRead.mutate({ conversationId: conversation.id, messageId: last.id });
+    // Only mark as read while the panel is genuinely open and the browser
+    // tab is focused. AnimatePresence keeps this component mounted for its
+    // ~220ms close animation after the panel is dismissed (e.g. clicking
+    // the backdrop) — a message arriving in that window was previously
+    // still getting marked read, even though the user had already closed
+    // the panel and never actually saw it. `open` is read live from the
+    // store (not inferred from still being mounted), so it reflects the
+    // real current state immediately, mid-exit-animation included.
+    if (last && open && isTabActive()) markRead.mutate({ conversationId: conversation.id, messageId: last.id });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items.length, conversation.id]);
+  }, [items.length, conversation.id, open]);
+
+  // A message that arrived while the tab was hidden/unfocused is correctly
+  // left unread by the effect above — but nothing retried it once the user
+  // actually came back, until the next new message happened to arrive.
+  // Retry on regaining visibility/focus instead of waiting for that.
+  useEffect(() => {
+    const tryMarkRead = (): void => {
+      if (!open || !isTabActive()) return;
+      const last = items.at(-1);
+      if (last) markRead.mutate({ conversationId: conversation.id, messageId: last.id });
+    };
+    document.addEventListener('visibilitychange', tryMarkRead);
+    window.addEventListener('focus', tryMarkRead);
+    return () => {
+      document.removeEventListener('visibilitychange', tryMarkRead);
+      window.removeEventListener('focus', tryMarkRead);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items.length, conversation.id, open]);
 
   const submit = async (): Promise<void> => {
     const body = draft.trim();
