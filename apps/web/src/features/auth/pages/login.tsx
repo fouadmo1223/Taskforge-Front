@@ -8,6 +8,7 @@ import { Eye, EyeOff } from 'lucide-react';
 
 import { errorText } from '@/lib/api/errors';
 import { useAuth } from '@/features/auth/auth.store';
+import { consumePendingInviteToken } from '@/features/auth/pending-invite';
 import { AuthLayout } from '@/features/auth/components/auth-layout';
 import { Button, Field, Input, toast } from '@/components/ui';
 
@@ -29,8 +30,9 @@ export function LoginPage(): React.ReactElement {
   const onSubmit = form.handleSubmit(async (values) => {
     try {
       await login(values.email, values.password);
+      const pendingInviteToken = consumePendingInviteToken();
       const from = (location.state as { from?: string } | null)?.from;
-      navigate(from ?? '/', { replace: true });
+      navigate(pendingInviteToken ? `/invites/accept?token=${pendingInviteToken}` : (from ?? '/'), { replace: true });
     } catch (err) {
       const message = errorText(err, t);
       form.setError('password', { message });
