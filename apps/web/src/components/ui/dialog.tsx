@@ -48,7 +48,7 @@ export function Dialog({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.15 }}
-                className="fixed inset-0 z-50 bg-black/40 backdrop-blur-[2px]"
+                className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-[2px]"
               />
             </RDialog.Overlay>
             <RDialog.Content
@@ -65,7 +65,7 @@ export function Dialog({
                 exit={{ opacity: 0, scale: 0.98, y: 4 }}
                 transition={{ duration: 0.18, ease: [0.25, 1, 0.5, 1] }}
                 className={cn(
-                  'fixed left-1/2 top-1/2 z-50 flex max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-1/2 flex-col',
+                  'fixed left-1/2 top-1/2 z-[100] flex max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-1/2 flex-col',
                   'rounded-2xl border border-border bg-surface-elevated shadow-lg',
                   SIZES[size],
                 )}
