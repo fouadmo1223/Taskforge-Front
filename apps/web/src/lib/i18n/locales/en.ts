@@ -375,6 +375,7 @@ export const en = {
     seenBy: 'Seen by',
     editingMessage: 'Editing message',
     pickConversations: 'Choose conversations',
+    noOtherConversations: 'You have no other conversations to forward this to yet — start a chat with someone else first.',
     group: 'Group chat',
     newMessage: 'New message',
     imageMessage: '📷 Photo',

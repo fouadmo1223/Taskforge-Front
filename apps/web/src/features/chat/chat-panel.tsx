@@ -907,17 +907,24 @@ function ConversationThread({ conversation }: { conversation: ConversationView }
           </Button>
         }
       >
-        <MultiSelect
-          value={forwardTargets}
-          onChange={setForwardTargets}
-          options={(conversations.data ?? [])
+        {(() => {
+          const forwardOptions = (conversations.data ?? [])
             .filter((c) => c.id !== conversation.id)
             .map((c) => ({
               value: c.id,
               label: c.type === 'group' ? (c.name ?? t('chat.dm')) : (byId.get(c.memberUserIds.find((id) => id !== myId) ?? '')?.name ?? t('chat.dm')),
-            }))}
-          placeholder={t('chat.pickConversations')}
-        />
+            }));
+          return forwardOptions.length === 0 ? (
+            <p className="py-2 text-center text-sm text-text-subtle">{t('chat.noOtherConversations')}</p>
+          ) : (
+            <MultiSelect
+              value={forwardTargets}
+              onChange={setForwardTargets}
+              options={forwardOptions}
+              placeholder={t('chat.pickConversations')}
+            />
+          );
+        })()}
       </Dialog>
     </>
   );

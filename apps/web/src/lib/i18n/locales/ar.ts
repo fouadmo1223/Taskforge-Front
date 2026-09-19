@@ -377,6 +377,7 @@ export const ar: TranslationSchema = {
     seenBy: 'شاهدها',
     editingMessage: 'تعديل الرسالة',
     pickConversations: 'اختر محادثات',
+    noOtherConversations: 'ليس لديك محادثات أخرى لإعادة توجيه هذه الرسالة إليها بعد — ابدأ محادثة مع شخص آخر أولًا.',
     group: 'محادثة جماعية',
     newMessage: 'رسالة جديدة',
     imageMessage: '📷 صورة',
