@@ -14,6 +14,11 @@ export interface ConversationView {
   unreadCount: number;
 }
 
+export interface MessageReactionView {
+  emoji: string;
+  userIds: string[];
+}
+
 export interface ChatMessageView {
   id: string;
   conversationId: string;
@@ -23,6 +28,7 @@ export interface ChatMessageView {
   mentionUserIds: string[];
   edited: boolean;
   forwardedFromUserId: string | null;
+  reactions: MessageReactionView[];
   createdAt: string;
 }
 
@@ -198,6 +204,31 @@ export function useMarkRead(workspaceId: string) {
     mutationFn: (v: { conversationId: string; messageId?: string }) =>
       api.post(`/workspaces/${workspaceId}/conversations/${v.conversationId}/read`, { messageId: v.messageId }),
     onSuccess: () => qc.invalidateQueries({ queryKey: convosKey(workspaceId) }),
+  });
+}
+
+/** Reacting with the same emoji again removes it — same toggle behavior server-side. */
+export function useToggleReaction(workspaceId: string, conversationId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (v: { messageId: string; emoji: string }) =>
+      api.post<ChatMessageView>(`/workspaces/${workspaceId}/conversations/${conversationId}/messages/${v.messageId}/reactions`, {
+        emoji: v.emoji,
+      }),
+    onSuccess: (msg) => updateChatMessage(qc, workspaceId, msg),
+  });
+}
+
+/** Text search across a conversation's whole history, not just the currently loaded page. */
+export function useSearchMessages(workspaceId: string, conversationId: string | null, query: string) {
+  return useQuery({
+    queryKey: ['chat-search', workspaceId, conversationId ?? '', query],
+    queryFn: () =>
+      api.get<ChatMessageView[]>(`/workspaces/${workspaceId}/conversations/${conversationId}/messages/search`, {
+        query: { q: query },
+      }),
+    enabled: Boolean(conversationId) && query.trim().length > 0,
+    staleTime: 5_000,
   });
 }
 

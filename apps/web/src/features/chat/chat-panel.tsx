@@ -4,6 +4,8 @@ import { AnimatePresence, motion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
 import * as Dropdown from '@radix-ui/react-dropdown-menu';
 import * as Popover from '@radix-ui/react-popover';
+import { isToday, isYesterday, format } from 'date-fns';
+import { ar as arLocale, enUS } from 'date-fns/locale';
 import {
   ArrowLeft,
   Check,
@@ -17,6 +19,7 @@ import {
   Pencil,
   MessageSquarePlus,
   MoreHorizontal,
+  Search,
   Send,
   Trash2,
   UserMinus,
@@ -53,8 +56,10 @@ import {
   useReadReceipts,
   useRemoveMember,
   useRenameGroup,
+  useSearchMessages,
   useSendImageMessage,
   useSendMessage,
+  useToggleReaction,
   type ChatMessageView,
   type ConversationView,
   type ReadReceipt,
@@ -66,6 +71,18 @@ export { useChatUi } from './chat-ui.store';
 
 /** Matches the backend's own edit / delete-for-everyone cutoff. */
 const EDIT_WINDOW_MS = 15 * 60 * 1000;
+
+/** "Today" / "Yesterday" / a localized full date — for the divider between days. */
+function dayLabel(dateStr: string, lang: string, t: ReturnType<typeof useTranslation>['t']): string {
+  const d = new Date(dateStr);
+  if (isToday(d)) return t('chat.today');
+  if (isYesterday(d)) return t('chat.yesterday');
+  return format(d, 'PPP', { locale: lang === 'ar' ? arLocale : enUS });
+}
+
+function sameDay(a: string, b: string): boolean {
+  return new Date(a).toDateString() === new Date(b).toDateString();
+}
 
 export function useTotalUnread(): number {
   const { workspaceId } = useWorkspace();
@@ -353,7 +370,7 @@ function ConversationList({
 }
 
 function ConversationThread({ conversation }: { conversation: ConversationView }): React.ReactElement {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { workspaceId } = useWorkspace();
   const { byId } = useWorkspaceUsers(workspaceId);
   const myId = useAuth((s) => s.user?.id ?? '');
@@ -366,6 +383,7 @@ function ConversationThread({ conversation }: { conversation: ConversationView }
   const editMsg = useEditMessage(workspaceId, conversation.id);
   const del = useDeleteMessage(workspaceId, conversation.id);
   const forwardMsg = useForwardMessage(workspaceId, conversation.id);
+  const react = useToggleReaction(workspaceId, conversation.id);
   const conversations = useConversations(workspaceId);
   const markRead = useMarkRead(workspaceId);
   const [draft, setDraft] = useState('');
@@ -378,6 +396,31 @@ function ConversationThread({ conversation }: { conversation: ConversationView }
   const [typingUserIds, setTypingUserIds] = useState<string[]>([]);
   const typingTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const lastTypingSentRef = useRef(0);
+
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchInput, setSearchInput] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  useEffect(() => {
+    const timer = setTimeout(() => setSearchQuery(searchInput), 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+  const searchResults = useSearchMessages(workspaceId, conversation.id, searchQuery);
+  const messageElsRef = useRef<Map<string, HTMLDivElement>>(new Map());
+  const [flashId, setFlashId] = useState<string | null>(null);
+  const closeSearch = (): void => {
+    setSearchOpen(false);
+    setSearchInput('');
+    setSearchQuery('');
+  };
+  const jumpToMessage = (messageId: string): void => {
+    const el = messageElsRef.current.get(messageId);
+    if (el) {
+      el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      setFlashId(messageId);
+      setTimeout(() => setFlashId((cur) => (cur === messageId ? null : cur)), 1600);
+    }
+    closeSearch();
+  };
 
   useRoom(channels.conversation(conversation.id));
   useRealtimeEvent<{ userId: string; messageId: string | null; at: string }>('chat.read', (msg) => {
@@ -493,6 +536,57 @@ function ConversationThread({ conversation }: { conversation: ConversationView }
 
   return (
     <>
+      <div className="relative border-b border-border">
+        <div className="flex items-center gap-1.5 px-3 py-1.5">
+          {searchOpen ? (
+            <>
+              <Search className="size-3.5 shrink-0 text-text-subtle" />
+              <input
+                autoFocus
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Escape' && closeSearch()}
+                placeholder={t('chat.searchPlaceholder')}
+                className="h-7 flex-1 bg-transparent text-sm text-text outline-none placeholder:text-text-subtle"
+              />
+              <button onClick={closeSearch} className="shrink-0 rounded p-1 text-text-subtle hover:bg-surface-sunken hover:text-text">
+                <X className="size-3.5" />
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="flex items-center gap-1.5 rounded-lg px-1.5 py-1 text-xs text-text-subtle hover:bg-surface-sunken hover:text-text"
+            >
+              <Search className="size-3.5" />
+              {t('chat.search')}
+            </button>
+          )}
+        </div>
+        {searchOpen && searchQuery && (
+          <div className="absolute inset-x-0 top-full z-10 max-h-72 overflow-y-auto border-b border-border bg-surface-elevated shadow-pop">
+            {searchResults.isLoading ? (
+              <div className="p-3 text-center text-xs text-text-subtle">{t('common.loading')}</div>
+            ) : (searchResults.data ?? []).length === 0 ? (
+              <div className="p-3 text-center text-xs text-text-subtle">{t('chat.noSearchResults')}</div>
+            ) : (
+              (searchResults.data ?? []).map((m) => (
+                <button
+                  key={m.id}
+                  onClick={() => jumpToMessage(m.id)}
+                  className="flex w-full flex-col items-start gap-0.5 border-b border-border/50 px-3 py-2 text-start last:border-0 hover:bg-surface-sunken"
+                >
+                  <span className="flex w-full items-center justify-between gap-2 text-[11px] text-text-subtle">
+                    <span className="font-medium text-text">{byId.get(m.senderUserId)?.name ?? '—'}</span>
+                    <RelativeTime value={m.createdAt} />
+                  </span>
+                  <span className="line-clamp-2 text-xs text-text-muted">{m.body || t('chat.imageMessage')}</span>
+                </button>
+              ))
+            )}
+          </div>
+        )}
+      </div>
       <Scrollable className="flex-1 px-4 py-3">
         {messages.isLoading ? (
           <div className="space-y-3">
@@ -507,11 +601,30 @@ function ConversationThread({ conversation }: { conversation: ConversationView }
               const isGroupOther = conversation.type === 'group' && !mine;
               const startOfRun = items[i - 1]?.senderUserId !== m.senderUserId;
               const showName = isGroupOther && startOfRun;
+              const showDayDivider = i === 0 || !sameDay(items[i - 1]!.createdAt, m.createdAt);
               const editable = mine && Date.now() - new Date(m.createdAt).getTime() < EDIT_WINDOW_MS;
               const seenByOthers = mine ? readBy(m) : [];
               const seenByAll = mine && others.length > 0 && seenByOthers.length === others.length;
               return (
-                <div key={m.id} className={cn('group flex flex-col', mine ? 'items-end' : 'items-start')}>
+                <div key={m.id} className="flex flex-col">
+                  {showDayDivider && (
+                    <div className="my-2 flex items-center gap-2 text-[11px] font-medium text-text-subtle">
+                      <div className="h-px flex-1 bg-border" />
+                      <span>{dayLabel(m.createdAt, i18n.resolvedLanguage ?? 'en', t)}</span>
+                      <div className="h-px flex-1 bg-border" />
+                    </div>
+                  )}
+                  <div
+                    ref={(el) => {
+                      if (el) messageElsRef.current.set(m.id, el);
+                      else messageElsRef.current.delete(m.id);
+                    }}
+                    className={cn(
+                      'group flex flex-col rounded-xl transition-colors',
+                      mine ? 'items-end' : 'items-start',
+                      flashId === m.id && 'bg-primary-soft',
+                    )}
+                  >
                   {showName && <span className="mb-0.5 ms-8 text-[11px] font-medium text-text-subtle">{byId.get(m.senderUserId)?.name ?? '—'}</span>}
                   <div className={cn('flex items-end gap-1.5', mine && 'flex-row-reverse')}>
                     {isGroupOther &&
@@ -596,7 +709,36 @@ function ConversationThread({ conversation }: { conversation: ConversationView }
                         </Dropdown.Content>
                       </Dropdown.Portal>
                     </Dropdown.Root>
+
+                    <EmojiPicker
+                      onPick={(emoji) => react.mutate({ messageId: m.id, emoji })}
+                      className="mb-1 rounded p-1 text-text-subtle opacity-0 hover:bg-surface-sunken hover:text-text group-hover:opacity-100"
+                    />
                   </div>
+
+                  {m.reactions.length > 0 && (
+                    <div className={cn('mt-0.5 flex flex-wrap gap-1', mine && 'justify-end')}>
+                      {m.reactions.map((r) => {
+                        const mineReacted = r.userIds.includes(myId);
+                        return (
+                          <button
+                            key={r.emoji}
+                            onClick={() => react.mutate({ messageId: m.id, emoji: r.emoji })}
+                            title={r.userIds.map((uid) => byId.get(uid)?.name ?? '—').join(', ')}
+                            className={cn(
+                              'flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-xs leading-none transition-colors',
+                              mineReacted
+                                ? 'border-primary bg-primary-soft text-primary'
+                                : 'border-border bg-surface-sunken text-text-muted hover:border-border-strong',
+                            )}
+                          >
+                            <span>{r.emoji}</span>
+                            <span className="text-[10px] font-medium">{r.userIds.length}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
 
                   <div className="mt-0.5 flex items-center gap-1 text-[10px] text-text-subtle">
                     <RelativeTime value={m.createdAt} />
@@ -638,6 +780,7 @@ function ConversationThread({ conversation }: { conversation: ConversationView }
                       ) : (
                         <Check className="size-3" />
                       ))}
+                  </div>
                   </div>
                 </div>
               );
