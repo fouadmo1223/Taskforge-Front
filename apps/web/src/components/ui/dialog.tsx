@@ -22,6 +22,11 @@ interface DialogProps {
   size?: 'sm' | 'md' | 'lg';
   /** hide the default close button */
   hideClose?: boolean;
+  /** override classes on the overlay + content (e.g. a higher `z-[100]` for a
+   * dialog that must sit above the chat panel) — everything else stays at the
+   * component's own defaults for every other Dialog. */
+  overlayClassName?: string;
+  className?: string;
 }
 
 const SIZES = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-2xl' };
@@ -36,6 +41,8 @@ export function Dialog({
   footer,
   size = 'md',
   hideClose,
+  overlayClassName,
+  className,
 }: DialogProps): React.ReactElement {
   return (
     <RDialog.Root open={open} onOpenChange={onOpenChange}>
@@ -48,7 +55,7 @@ export function Dialog({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.15 }}
-                className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-[2px]"
+                className={cn('fixed inset-0 z-50 bg-black/40 backdrop-blur-[2px]', overlayClassName)}
               />
             </RDialog.Overlay>
             <RDialog.Content
@@ -65,9 +72,10 @@ export function Dialog({
                 exit={{ opacity: 0, scale: 0.98, y: 4 }}
                 transition={{ duration: 0.18, ease: [0.25, 1, 0.5, 1] }}
                 className={cn(
-                  'fixed left-1/2 top-1/2 z-[100] flex max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-1/2 flex-col',
+                  'fixed left-1/2 top-1/2 z-50 flex max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-1/2 flex-col',
                   'rounded-2xl border border-border bg-surface-elevated shadow-lg',
                   SIZES[size],
+                  className,
                 )}
               >
                 {(title || !hideClose) && (

@@ -884,6 +884,8 @@ function ConversationThread({ conversation }: { conversation: ConversationView }
         open={Boolean(forwarding)}
         onOpenChange={(o) => !o && setForwarding(null)}
         title={t('chat.forward')}
+        overlayClassName="z-[100]"
+        className="z-[100]"
         footer={
           <Button
             loading={forwardMsg.isPending}
